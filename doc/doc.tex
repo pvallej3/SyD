@@ -1,0 +1,114 @@
+\documentclass{article}
+
+
+\usepackage[utf8]{inputenc}
+
+\title{Visualisation de scènes 3d}
+\author{Eric Maisel}
+\date{}
+
+\begin{document}
+\maketitle
+
+
+\section{Architecture du programme}
+Le programme est distribué sur plusieurs processus (exécutés éventuellement sur plusieurs machines).
+Ces processus coopèrent entre eux en échangeant des messages. Pour l'instant : 
+\begin{itemize}
+\item Les messages sont des chaînes de caractères (une ligne) ;
+\item Le protocole de transport des messages utilisé est TCP/IP .
+\end{itemize}
+Nous appellerons par la suite \begin{bf}composants\end{bf} ces processus. Pour l'instant il existe deux composants : 
+\begin{itemize}
+\item \begin{tt}diffuseur\end{tt} : il met en oeuvre un service de diffusion. Les autres composants peuvent s'y abonner.
+Tous les messages qu'un abonné envoie au diffuseur est répercuté aux autres abonnés. Les messages transitent via des sockets. Pour l'instant le port est codé en dur (50000).
+
+\item \begin{tt}visu3d\end{tt} : ce composant permet de visualiser une scène décrite dans un format décrit ci-dessous.
+
+\end{itemize}
+%
+D'autres composants de visualisation sont envisageables. Mettant en oeuvre d'autres fonctionnalités, écrits dans d'autres langages, ... La seule contrainte : assurer une compatibilité ascendante avec les composants existants déjà.
+
+
+\section{Utilisation du programme}
+
+\subsection{Ligne de commandes}
+\begin{verbatim}
+diffuseur &
+visu3d nomUtilisateur &
+\end{verbatim}
+
+\subsection{Interface graphique}
+Il s'agit ici de l'interface du composant \begin{tt}visu3d\end{tt}. Les commandes sont simples : 
+%
+\begin{itemize}
+\item La souris pour contrôler la direction (drag horizontal)
+\item Les flèches haut/bas pour contrôler la vitesse
+\item Les flèches gauche/droit pour contrôler le sens de déplacement (avant/arrière) 
+\item La touche espace pour arréter le dééplacement de la caméra
+\item La touche ESC pour quitter le programme de visualisation
+\end{itemize}
+
+
+\section{Description des scènes}
+
+\subsection{Description des objets élémentaires}
+
+\subsubsection{Sol}
+\begin{verbatim}
+<Sol texture="../data/textures/sable.png" taille="100.0"/>
+\end{verbatim}
+
+\subsubsection{Ciel}
+\begin{verbatim}
+<SkyBox texture="../data/skyboxes/miramar_large.jpg" size="1000"/>
+\end{verbatim}
+
+\subsubsection{Tableaux}
+\begin{verbatim}
+<Tableau texture="../data/tableaux/Vinci-Joconde.jpg" 
+         hauteur="0.5" largeur="0.608" />
+\end{verbatim}
+    
+\subsubsection{Objets au format obj}
+\begin{verbatim}
+<Obj url=nomFichierObj />
+\end{verbatim}
+
+\subsection{Description des regroupements d'objets}
+
+\subsubsection{Groupes d'objets avec application de transformations géométriques}
+Les transformations géométriques élémentaires utilisées sont : 
+\begin{itemize}
+\item une translation, spécifiée par les 3 coordonnées du vecteurs translation (\begin{bf}par défaut\end{bf} : le vecteur nul)
+\item une rotation, spécifiée par 3 angles de rotation (autours des axes du repère 
+associé au noeud \begin{tt}Transform\end{tt} (\begin{bf}par défaut\end{bf} : la rotation d'angles 0.0, 0.0, 0.0)
+\item une mise à l'échelle, spécifiée par 3 facteurs d'échelle (par rapport aux axes du repère 
+associé au noeud \begin{tt}Transform\end{tt} (\begin{bf}par défaut\end{bf} : la mise à l'échelle de facteurs  1.0, 1.0, 1.0)
+\end{itemize}
+On applique d'abord la mise à l'échelle puis les rotations puis la translation.
+\begin{verbatim}
+<Transform translation="0.0 0.0 0.0" 
+           rotation="0.0 0.0 0.0"
+           scale="1.0 1.0 1.0" >
+   ...
+</Transform>
+\end{verbatim}
+
+     
+\subsubsection{Listes d'affichage}
+Les listes d'affichage (display-list pour openGL) permettent de compiler un ensemble d'instructions
+d'affichage. On peut ainsi obtenir un gain de temps lors de l'affichage dun ensemble d'objets. Par
+ contre il devient impossible de modifier le code openGL exécuté, donc d'animer ces objets. On
+reprend ici cette fonctionnalité en spécifiant qu'un ensemble de graphes de scène peut être compilé.
+
+\begin{verbatim}
+<DisplayList>
+  ...
+</DisplayList>
+\end{verbatim}
+
+\section{Protocole de communication entre les composants}
+\end{document}
+
+
